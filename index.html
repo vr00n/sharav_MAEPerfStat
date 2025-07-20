@@ -119,6 +119,50 @@
                     <canvas id="systems-chart"></canvas>
                 </div>
             </div>
+
+            <!-- About The Charts Section -->
+            <div id="about-section" class="max-w-4xl mx-auto bg-gray-800 p-6 rounded-xl shadow-lg mt-12">
+                <h2 class="text-2xl font-bold text-center mb-6">Chart Explanations for Ship Management</h2>
+                <div class="space-y-6">
+                    <!-- Pmax Chart Explanation -->
+                    <div class="p-4 bg-gray-700 rounded-lg">
+                        <h3 class="text-lg font-semibold text-blue-400 mb-2">Cylinder Pmax (bar)</h3>
+                        <p class="text-gray-300 text-sm">
+                            This chart displays the Peak Firing Pressure (Pmax) for each cylinder. Pmax is a critical indicator of the combustion process and mechanical load on the engine components.
+                            <br><strong>Analysis:</strong> A uniform Pmax across all cylinders signifies a well-balanced engine. Significant deviation in one cylinder may indicate issues such as a faulty fuel injector, incorrect fuel injection timing, piston ring blow-by, or a leaking exhaust valve. Consistently low Pmax across all units could suggest a derated engine, low-quality fuel, or suboptimal turbocharger performance.
+                        </p>
+                    </div>
+                    <!-- Exhaust Temp Chart Explanation -->
+                    <div class="p-4 bg-gray-700 rounded-lg">
+                        <h3 class="text-lg font-semibold text-red-400 mb-2">Cylinder Exhaust Temp (°C)</h3>
+                        <p class="text-gray-300 text-sm">
+                            This chart shows the exhaust gas temperature from each cylinder post-combustion. This parameter is a direct reflection of the thermal load and the combustion efficiency within each unit.
+                            <br><strong>Analysis:</strong> Uniform temperatures are desirable. An elevated temperature in a single cylinder can point to afterburning due to a retarded injection timing, a leaking exhaust valve, or a partially blocked injector nozzle. Conversely, a lower temperature might suggest misfiring, poor fuel atomization, or reduced load on that specific cylinder.
+                        </p>
+                    </div>
+                    <!-- Electrical Load Chart Explanation -->
+                    <div class="p-4 bg-gray-700 rounded-lg">
+                        <h3 class="text-lg font-semibold text-green-400 mb-2">Electrical Load</h3>
+                        <p class="text-gray-300 text-sm">
+                            This doughnut chart visualizes the relationship between Active Power (kW) and Reactive Power (kVAR). Active Power is the energy consumed by the load, while Reactive Power is required to sustain the magnetic fields in inductive loads (e.g., motors).
+                            <br><strong>Analysis:</strong> The ratio between these two values determines the Power Factor (PF). A low PF (high kVAR relative to kW) indicates inefficient power utilization, leading to higher currents, increased thermal stress on electrical components, and potential financial penalties. The goal is to maintain a PF as close to unity (1.0) as possible.
+                        </p>
+                    </div>
+                    <!-- Systems Chart Explanation -->
+                    <div class="p-4 bg-gray-700 rounded-lg">
+                        <h3 class="text-lg font-semibold text-violet-400 mb-2">System Pressures & Temperatures</h3>
+                        <p class="text-gray-300 text-sm">
+                            This radar chart provides a holistic view of critical system-wide parameters, which are vital for overall engine health and safety.
+                            <br><strong>Analysis:</strong>
+                            <ul class="list-disc list-inside mt-2 text-sm space-y-1">
+                                <li><strong>Jacket Cool Out (°C):</strong> Monitors the efficiency of the cylinder block cooling. High values risk overheating and liner/piston damage.</li>
+                                <li><strong>Scavenge Air Temp/Press:</strong> These values reflect turbocharger efficiency. Low pressure or high temperature reduces charge air density, leading to poor combustion and lower power output.</li>
+                                <li><strong>LO Inlet Temp/Press:</strong> Critical for maintaining lubrication. High temperature degrades oil viscosity, while low pressure indicates a failure in the lubrication circuit, risking catastrophic bearing damage.</li>
+                            </ul>
+                        </p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
