@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marine Auxiliary Engine Performance Analyzer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827; /* Tailwind gray-900 */
+            color: #f3f4f6; /* Tailwind gray-100 */
+        }
+        .chart-container {
+            background-color: #1f2937; /* Tailwind gray-800 */
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease-in-out;
+        }
+        .chart-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .summary-card {
+            background-color: #1f2937;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            text-align: center;
+            border: 1px solid #374151; /* gray-700 */
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+        }
+        .btn-primary {
+            background-color: #3b82f6; /* blue-500 */
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #2563eb; /* blue-600 */
+        }
+        .btn-secondary {
+            background-color: #4b5563; /* gray-600 */
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #374151; /* gray-700 */
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="container mx-auto p-4 md:p-8">
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <img src="https://github.com/vr00n/sharav_MAEPerfStat/blob/main/sharavships-logo.jpg?raw=true" alt="Sharav Ships Logo" class="h-24 mx-auto mb-4 rounded-full">
+            <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">Marine Auxiliary Engine Performance Analyzer</h1>
+            <p class="text-lg text-gray-400">Displaying sample data. Upload your own CSV to analyze its performance.</p>
+        </header>
+
+        <!-- Instructions & Actions -->
+        <div class="max-w-4xl mx-auto bg-gray-800 p-6 rounded-xl shadow-lg mb-8">
+             <h2 class="text-xl font-semibold text-center mb-4">Get Started</h2>
+            <div class="flex flex-col md:flex-row items-center justify-center gap-4 mt-6">
+                <button id="download-template" class="btn btn-secondary w-full md:w-auto">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                    Download Template
+                </button>
+                 <button id="load-sample-data" class="btn btn-secondary w-full md:w-auto">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" /></svg>
+                    Load Sample Data
+                </button>
+                <label for="csv-file-input" class="btn btn-primary w-full md:w-auto">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                    Upload Your CSV
+                </label>
+                <input type="file" id="csv-file-input" class="hidden" accept=".csv">
+            </div>
+        </div>
+        
+        <!-- Error Message Display -->
+        <div id="error-message" class="max-w-3xl mx-auto bg-red-500/20 border border-red-500 text-red-300 p-4 rounded-lg text-center hidden mb-8"></div>
+
+        <!-- Dashboard Section -->
+        <div id="dashboard" class="space-y-8">
+            <!-- Summary Cards -->
+            <div id="summary-section">
+                <h2 class="text-2xl font-bold text-center mb-4">Performance Snapshot</h2>
+                <div id="summary-cards" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <!-- Cards will be injected here -->
+                </div>
+            </div>
+
+            <!-- Charts Grid -->
+            <div id="charts-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="chart-container">
+                    <h3 class="text-lg font-semibold mb-4 text-center">Cylinder Pmax (bar)</h3>
+                    <canvas id="cylinder-pressure-chart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3 class="text-lg font-semibold mb-4 text-center">Cylinder Exhaust Temp (°C)</h3>
+                    <canvas id="exhaust-temp-chart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3 class="text-lg font-semibold mb-4 text-center">Electrical Load</h3>
+                    <canvas id="power-chart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3 class="text-lg font-semibold mb-4 text-center">System Pressures & Temperatures</h3>
+                    <canvas id="systems-chart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DOM Elements ---
+            const downloadBtn = document.getElementById('download-template');
+            const loadSampleBtn = document.getElementById('load-sample-data');
+            const fileInput = document.getElementById('csv-file-input');
+            const dashboard = document.getElementById('dashboard');
+            const errorMessageDiv = document.getElementById('error-message');
+            const summaryCardsContainer = document.getElementById('summary-cards');
+
+            // --- Chart.js Global Config ---
+            Chart.defaults.color = '#d1d5db'; // gray-300
+            Chart.defaults.borderColor = '#4b5563'; // gray-600
+            
+            // --- State ---
+            const appState = {
+                charts: {}
+            };
+            
+            // --- Sample Data ---
+            const sampleData = {
+                general: { runningHours: 31000, rpm: 720 },
+                switchboard: { kw: 460, kvar: 320 },
+                cylinders: {
+                    pMax: { 'Cyl 1': 92, 'Cyl 2': 93, 'Cyl 3': 92, 'Cyl 4': 93, 'Cyl 5': 94 },
+                    exhTemps: { 'Cyl 1': 430, 'Cyl 2': 430, 'Cyl 3': 420, 'Cyl 4': 435, 'Cyl 5': 430 },
+                    pumpIndices: { 'Cyl 1': 22, 'Cyl 2': 22, 'Cyl 3': 22, 'Cyl 4': 23, 'Cyl 5': 23 }
+                },
+                systems: {
+                    jacketCoolOut: 75,
+                    scavAirTemp: 45,
+                    scavAirPress: 1.8,
+                    loInletTemp: 62,
+                    loInletPress: 3.8
+                }
+            };
+
+
+            // --- Event Listeners ---
+            downloadBtn.addEventListener('click', downloadTemplate);
+            loadSampleBtn.addEventListener('click', () => {
+                hideError();
+                updateDashboard(sampleData);
+                dashboard.scrollIntoView({ behavior: 'smooth' });
+            });
+            fileInput.addEventListener('change', handleFileUpload);
+            
+            // --- Initial Load ---
+            updateDashboard(sampleData);
+
+
+            // --- Functions ---
+
+            /**
+             * Generates and triggers the download of a CSV template.
+             */
+            function downloadTemplate() {
+                const headers = [
+                    "PARAMETER", "VALUE", "CYL_1", "CYL_2", "CYL_3", "CYL_4", "CYL_5", "CYL_6", "CYL_7", "CYL_8", "NOTES"
+                ];
+                const rows = [
+                    ["Vessel Name", "Example Vessel", "", "", "", "", "", "", "", "", "General Information"],
+                    ["Engine No", "1", "", "", "", "", "", "", "", "", ""],
+                    ["Running Hours", "31000", "", "", "", "", "", "", "", "", ""],
+                    ["RPM", "720", "", "", "", "", "", "", "", "", ""],
+                    ["Effective kW", "460", "", "", "", "", "", "", "", "", "Switchboard"],
+                    ["Voltage (V)", "450", "", "", "", "", "", "", "", "", ""],
+                    ["Current (A)", "625", "", "", "", "", "", "", "", "", ""],
+                    ["kVAR", "320", "", "", "", "", "", "", "", "", ""],
+                    ["Pump Index", "", "22", "22", "22", "23", "23", "", "", "", "Cylinder Data (leave blank if not applicable)"],
+                    ["Pmax (bar)", "", "92", "93", "92", "93", "94", "", "", "", "Convert Mpa to bar (1 Mpa = 10 bar)"],
+                    ["Exhaust Temp (C)", "", "430", "430", "420", "435", "430", "", "", "", ""],
+                    ["Jacket Cool In (C)", "64", "", "", "", "", "", "", "", "", "Temperatures & Pressures"],
+                    ["Jacket Cool Out (C)", "75", "", "", "", "", "", "", "", "", ""],
+                    ["Scavenge Air Temp (C)", "45", "", "", "", "", "", "", "", "", ""],
+                    ["Scavenge Air Press (bar)", "1.8", "", "", "", "", "", "", "", "", ""],
+                    ["LO Eng Inlet Temp (C)", "62", "", "", "", "", "", "", "", "", ""],
+                    ["LO Eng Inlet Press (bar)", "3.8", "", "", "", "", "", "", "", "", ""],
+                    ["Fuel Oil Inlet Temp (C)", "120", "", "", "", "", "", "", "", "", ""],
+                    ["Fuel Oil Inlet Press (bar)", "6", "", "", "", "", "", "", "", "", ""],
+                ];
+
+                let csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n" +
+                    rows.map(e => e.join(",")).join("\n");
+
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", "engine_performance_template.csv");
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+
+            /**
+             * Handles the file upload event, reads the file, and triggers parsing.
+             * @param {Event} event The file input change event.
+             */
+            function handleFileUpload(event) {
+                const file = event.target.files[0];
+                if (!file) {
+                    showError("No file selected.");
+                    return;
+                }
+                if (!file.name.endsWith('.csv')) {
+                    showError("Invalid file type. Please upload a .csv file.");
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const parsedData = parseCSV(e.target.result);
+                        if(Object.keys(parsedData.cylinders.pMax).length === 0) {
+                            throw new Error("No cylinder data found. Please check your Pmax and Exhaust Temp rows.");
+                        }
+                        hideError();
+                        updateDashboard(parsedData);
+                    } catch (error) {
+                        showError(`Failed to parse CSV: ${error.message}`);
+                        dashboard.style.display = 'none';
+                    }
+                };
+                reader.onerror = () => {
+                    showError("Failed to read the file.");
+                };
+                reader.readAsText(file);
+            }
+
+            /**
+             * Parses the raw CSV text into a structured JavaScript object.
+             * @param {string} csvText The raw text content of the CSV file.
+             * @returns {object} A structured object with the parsed data.
+             */
+            function parseCSV(csvText) {
+                const lines = csvText.split(/\r?\n/).map(line => line.split(',').map(cell => cell.trim()));
+                const data = {
+                    general: {},
+                    switchboard: {},
+                    cylinders: { pMax: {}, exhTemps: {}, pumpIndices: {} },
+                    systems: {}
+                };
+
+                const findValue = (line, keyword) => {
+                    if (line[0].toLowerCase().includes(keyword.toLowerCase())) {
+                        for(let i = 1; i < line.length; i++) {
+                            const val = parseFloat(line[i]);
+                            if(!isNaN(val)) return val;
+                        }
+                    }
+                    return null;
+                };
+
+                const findCylinderValues = (line, keyword) => {
+                    const values = {};
+                     if (line[0].toLowerCase().includes(keyword.toLowerCase())) {
+                        for(let i = 2; i < line.length; i++) { // Start from CYL_1 column
+                            const val = parseFloat(line[i]);
+                            if(!isNaN(val)) {
+                                values[`Cyl ${i-1}`] = val;
+                            }
+                        }
+                    }
+                    return values;
+                };
+
+                lines.forEach(line => {
+                    if (line.length < 2) return;
+                    let val;
+                    val = findValue(line, 'Running Hours'); if(val !== null) data.general.runningHours = val;
+                    val = findValue(line, 'RPM'); if(val !== null) data.general.rpm = val;
+                    val = findValue(line, 'Effective kW'); if(val !== null) data.switchboard.kw = val;
+                    val = findValue(line, 'kVAR'); if(val !== null) data.switchboard.kvar = val;
+                    val = findValue(line, 'Jacket Cool Out'); if(val !== null) data.systems.jacketCoolOut = val;
+                    val = findValue(line, 'Scavenge Air Temp'); if(val !== null) data.systems.scavAirTemp = val;
+                    val = findValue(line, 'Scavenge Air Press'); if(val !== null) data.systems.scavAirPress = val;
+                    val = findValue(line, 'LO Eng Inlet Temp'); if(val !== null) data.systems.loInletTemp = val;
+                    val = findValue(line, 'LO Eng Inlet Press'); if(val !== null) data.systems.loInletPress = val;
+                    let cylVals;
+                    cylVals = findCylinderValues(line, 'Pmax'); if(Object.keys(cylVals).length > 0) data.cylinders.pMax = cylVals;
+                    cylVals = findCylinderValues(line, 'Exhaust Temp'); if(Object.keys(cylVals).length > 0) data.cylinders.exhTemps = cylVals;
+                    cylVals = findCylinderValues(line, 'Pump Index'); if(Object.keys(cylVals).length > 0) data.cylinders.pumpIndices = cylVals;
+                });
+                
+                return data;
+            }
+
+            /**
+             * Updates the UI with the parsed data, including summary cards and charts.
+             * @param {object} data The structured data object.
+             */
+            function updateDashboard(data) {
+                renderSummaryCards(data);
+                renderCharts(data);
+                dashboard.style.display = 'block';
+                dashboard.scrollIntoView({ behavior: 'smooth' });
+            }
+            
+            /**
+             * Renders the summary cards at the top of the dashboard.
+             * @param {object} data The structured data object.
+             */
+            function renderSummaryCards(data) {
+                summaryCardsContainer.innerHTML = ''; 
+
+                const pMaxValues = Object.values(data.cylinders.pMax);
+                const exhTempValues = Object.values(data.cylinders.exhTemps);
+                
+                const avgPmax = pMaxValues.length ? pMaxValues.reduce((a, b) => a + b, 0) / pMaxValues.length : 0;
+                const maxExhTemp = exhTempValues.length ? Math.max(...exhTempValues) : 0;
+                
+                const cards = [
+                    { label: 'Running Hours', value: data.general.runningHours?.toLocaleString() || 'N/A', unit: 'hrs' },
+                    { label: 'Power Output', value: data.switchboard.kw?.toLocaleString() || 'N/A', unit: 'kW' },
+                    { label: 'Avg. Pmax', value: avgPmax.toFixed(1), unit: 'bar' },
+                    { label: 'Max Exh. Temp', value: maxExhTemp.toFixed(0), unit: '°C' }
+                ];
+
+                cards.forEach(card => {
+                    const cardEl = document.createElement('div');
+                    cardEl.className = 'summary-card';
+                    cardEl.innerHTML = `
+                        <div class="text-2xl font-bold text-blue-400">${card.value}</div>
+                        <div class="text-sm text-gray-400">${card.label} (${card.unit})</div>
+                    `;
+                    summaryCardsContainer.appendChild(cardEl);
+                });
+            }
+
+
+            /**
+             * Renders all the charts on the dashboard.
+             * @param {object} data The structured data object.
+             */
+            function renderCharts(data) {
+                Object.values(appState.charts).forEach(chart => chart.destroy());
+
+                const cylinderLabels = Object.keys(data.cylinders.pMax);
+                
+                const pMaxValues = Object.values(data.cylinders.pMax);
+                const avgPmax = pMaxValues.length ? pMaxValues.reduce((a, b) => a + b, 0) / pMaxValues.length : 0;
+                const pmaxCtx = document.getElementById('cylinder-pressure-chart').getContext('2d');
+                appState.charts.pmax = new Chart(pmaxCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: cylinderLabels,
+                        datasets: [{
+                            label: 'Pmax (bar)',
+                            data: pMaxValues,
+                            backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                            borderColor: 'rgba(59, 130, 246, 1)',
+                            borderWidth: 1
+                        }, {
+                            label: 'Average',
+                            data: Array(cylinderLabels.length).fill(avgPmax),
+                            type: 'line',
+                            borderColor: '#f87171',
+                            borderWidth: 2,
+                            fill: false,
+                            pointRadius: 0
+                        }]
+                    },
+                    options: { scales: { y: { beginAtZero: false } } }
+                });
+
+                const exhTempValues = Object.values(data.cylinders.exhTemps);
+                const avgExhTemp = exhTempValues.length ? exhTempValues.reduce((a, b) => a + b, 0) / exhTempValues.length : 0;
+                const exhCtx = document.getElementById('exhaust-temp-chart').getContext('2d');
+                appState.charts.exh = new Chart(exhCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: cylinderLabels,
+                        datasets: [{
+                            label: 'Exhaust Temp (°C)',
+                            data: exhTempValues,
+                            backgroundColor: 'rgba(239, 68, 68, 0.6)',
+                            borderColor: 'rgba(239, 68, 68, 1)',
+                            borderWidth: 1
+                        }, {
+                            label: 'Average',
+                            data: Array(cylinderLabels.length).fill(avgExhTemp),
+                            type: 'line',
+                            borderColor: '#60a5fa',
+                            borderWidth: 2,
+                            fill: false,
+                            pointRadius: 0
+                        }]
+                    },
+                    options: { scales: { y: { beginAtZero: false } } }
+                });
+
+                const powerCtx = document.getElementById('power-chart').getContext('2d');
+                appState.charts.power = new Chart(powerCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Active Power (kW)', 'Reactive Power (kVAR)'],
+                        datasets: [{
+                            data: [data.switchboard.kw || 0, data.switchboard.kvar || 0],
+                            backgroundColor: ['rgba(16, 185, 129, 0.7)', 'rgba(245, 158, 11, 0.7)'],
+                            borderColor: ['#10b981', '#f59e0b'],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: true }
+                });
+
+                const systemsCtx = document.getElementById('systems-chart').getContext('2d');
+                appState.charts.systems = new Chart(systemsCtx, {
+                    type: 'radar',
+                    data: {
+                        labels: ['Jacket Cool Out (°C)', 'Scav Air Temp (°C)', 'Scav Air Press (bar)', 'LO Inlet Temp (°C)', 'LO Inlet Press (bar)'],
+                        datasets: [{
+                            label: 'Operating Values',
+                            data: [data.systems.jacketCoolOut, data.systems.scavAirTemp, data.systems.scavAirPress, data.systems.loInletTemp, data.systems.loInletPress],
+                            backgroundColor: 'rgba(139, 92, 246, 0.4)',
+                            borderColor: '#8b5cf6',
+                            pointBackgroundColor: '#8b5cf6',
+                            pointBorderColor: '#fff',
+                            pointHoverBackgroundColor: '#fff',
+                            pointHoverBorderColor: '#8b5cf6'
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            r: {
+                                angleLines: { color: '#4b5563' },
+                                grid: { color: '#4b5563' },
+                                pointLabels: { font: { size: 12 } },
+                                ticks: { backdropColor: '#1f2937', color: '#d1d5db' }
+                            }
+                        }
+                    }
+                });
+            }
+
+            /**
+             * Displays an error message to the user.
+             * @param {string} message The error message to display.
+             */
+            function showError(message) {
+                errorMessageDiv.textContent = message;
+                errorMessageDiv.classList.remove('hidden');
+            }
+
+            /**
+             * Hides the error message display.
+             */
+            function hideError() {
+                errorMessageDiv.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
